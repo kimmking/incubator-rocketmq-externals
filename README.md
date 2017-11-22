@@ -1,32 +1,38 @@
 # RocketMQ Externals
 
-There are some RocketMQ external projects, with the purpose of growing the RocketMQ community.
+There are many Apache RocketMQ external projects contributed and maintained by community.
 
-## RocketMQ-Console-Ng
-A console for RocketMQ
+## RocketMQ-Console
+A newly designed RocketMQ's console using spring-boot.
 
 ## RocketMQ-JMS
-RocketMQ-JMS is an implement of JMS specification,taking Apache RocketMQ as broker. Now we are on the way of supporting JMS 1.1 and JMS2.0 is our final target.
+RocketMQ's JMS 1.1 spec. implementation.
 
-## RocketMQ-Flume-Ng
-
-This project is used to receive and send messages between
-[RocketMQ](http://rocketmq.incubator.apache.org/) and [Flume-ng](https://github.com/apache/flume)
-
-1. Firstly, please get familiar with [RocketMQ](http://rocketmq.incubator.apache.org/) and [Flume-ng](https://github.com/apache/flume).
-2. Ensure that the jar related to [RocketMQ](http://rocketmq.incubator.apache.org/dowloading/releases) exists in local maven repository.
-3. Execute the following command in rocketmq-flume root directory
-
-   `mvn clean install dependency:copy-dependencies`
-
-4. Copy the jar depended by rocketmq-flume to `$FLUME_HOME/lib`(the specific jar will be given later)
+## RocketMQ-Flume
+Flume RocketMQ source and sink implementation.
 
 
 ## RocketMQ-Spark
 
-Apache Spark-Streaming integration with RocketMQ. Both push & pull consumer mode are provided.
-For more details please refer to rocketmq-spark README.md.
+Integration of Apache Spark-Streaming and Apache RocketMQ. Both push & pull consumers are provided. For more details please refer to [README](https://github.com/apache/incubator-rocketmq-externals/tree/master/rocketmq-spark).
 
 ## RocketMQ-Docker
 Apache RocketMQ Docker provides Dockerfile and bash scripts for building and running docker image.
 
+## RocketMQ-MySQL
+This project is a data replicator between MySQL and other systems.For more details please refer to [README](https://github.com/apache/incubator-rocketmq-externals/tree/master/rocketmq-mysql).
+
+## RocketMQ-CPP
+
+A stable, widely used C++ client sdk of Apache RocketMQ, donated by Alibaba Group.
+
+## Others
+[RocketMQ-Druid](https://github.com/druid-io/druid/tree/master/extensions-contrib/druid-rocketmq), [RocketMQ-Ignite](https://github.com/apache/ignite/tree/master/modules/rocketmq) and [RocketMQ-Storm](https://github.com/apache/storm/tree/master/external/storm-rocketmq) integration can be found in those repositories.
+
+## Contribution
+
+We are always very happy to have contributions, whether for trivial cleanups or big new features. We want to have high quality, well documented codes for each programming language, as well as the surrounding ecosystem of integration tools that people use with RocketMQ.
+
+Nor is code the only way to contribute to the project. We strongly value documentation, integration with other project, and gladly accept improvements for these aspects.
+
+More info please refer to [How To Contribute](http://rocketmq.apache.org/docs/how-to-contribute/).
