@@ -95,13 +95,13 @@ public class JmsBaseConnection implements Connection {
     }
 
     @Override
-    public Session createSession(int i) throws JMSException {
-        return null;
+    public Session createSession(int sessionMode) throws JMSException {
+        return this.createSession(false,sessionMode);
     }
 
     @Override
     public Session createSession() throws JMSException {
-        return null;
+        return this.createSession(false,Session.AUTO_ACKNOWLEDGE);
     }
 
     @Override
@@ -135,7 +135,6 @@ public class JmsBaseConnection implements Connection {
             if (this.session != null) {
                 this.session.start();
             }
-
         }
     }
 
@@ -151,7 +150,6 @@ public class JmsBaseConnection implements Connection {
             if (this.session != null) {
                 this.session.close();
             }
-
         }
     }
 
@@ -164,8 +162,11 @@ public class JmsBaseConnection implements Connection {
     }
 
     @Override
-    public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String s, String s1, ServerSessionPool serverSessionPool, int i) throws JMSException {
-        return null;
+    public ConnectionConsumer createSharedConnectionConsumer(Topic topic,
+        String subscriptionName,
+        String messageSelector, ServerSessionPool sessionPool,
+        int maxMessages) throws JMSException{
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
@@ -177,8 +178,11 @@ public class JmsBaseConnection implements Connection {
     }
 
     @Override
-    public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic, String s, String s1, ServerSessionPool serverSessionPool, int i) throws JMSException {
-        return null;
+    public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic,
+        String subscriptionName,
+        String messageSelector, ServerSessionPool sessionPool,
+        int maxMessages) throws JMSException{
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     /**

@@ -208,13 +208,13 @@ public class JmsBaseSession implements Session {
     }
 
     @Override
-    public MessageConsumer createSharedConsumer(Topic topic, String s) throws JMSException {
-        return null;
+    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
-    public MessageConsumer createSharedConsumer(Topic topic, String s, String s1) throws JMSException {
-        return null;
+    public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, java.lang.String messageSelector) throws JMSException {
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
@@ -271,23 +271,23 @@ public class JmsBaseSession implements Session {
     }
 
     @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String s) throws JMSException {
-        return null;
+    public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
-    public MessageConsumer createDurableConsumer(Topic topic, String s, String s1, boolean b) throws JMSException {
-        return null;
+    public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
-    public MessageConsumer createSharedDurableConsumer(Topic topic, String s) throws JMSException {
-        return null;
+    public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
-    public MessageConsumer createSharedDurableConsumer(Topic topic, String s, String s1) throws JMSException {
-        return null;
+    public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
+        throw new UnsupportedOperationException("Unsupported");
     }
 
     @Override
