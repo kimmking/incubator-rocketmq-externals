@@ -1,7 +1,23 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one or more
+* contributor license agreements.  See the NOTICE file distributed with
+* this work for additional information regarding copyright ownership.
+* The ASF licenses this file to You under the Apache License, Version 2.0
+* (the "License"); you may not use this file except in compliance with
+* the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
 #ifndef OUTPUTSTREAM_H_INCLUDED
 #define OUTPUTSTREAM_H_INCLUDED
 
-#include "ByteOrder.h"
 #include "InputStream.h"
 namespace rocketmq {
 //==============================================================================
@@ -75,14 +91,6 @@ class ROCKETMQCLIENT_API OutputStream {
   */
   virtual bool writeBool(bool boolValue);
 
-  /** Writes a 16-bit integer to the stream in a little-endian byte order.
-      This will write two bytes to the stream: (value & 0xff), then (value >>
-     8).
-      @returns false if the write operation fails for some reason
-      @see InputStream::readShort
-  */
-  virtual bool writeShort(short value);
-
   /** Writes a 16-bit integer to the stream in a big-endian byte order.
       This will write two bytes to the stream: (value >> 8), then (value &
      0xff).
@@ -91,23 +99,11 @@ class ROCKETMQCLIENT_API OutputStream {
   */
   virtual bool writeShortBigEndian(short value);
 
-  /** Writes a 32-bit integer to the stream in a little-endian byte order.
-      @returns false if the write operation fails for some reason
-      @see InputStream::readInt
-  */
-  virtual bool writeInt(int value);
-
   /** Writes a 32-bit integer to the stream in a big-endian byte order.
       @returns false if the write operation fails for some reason
       @see InputStream::readIntBigEndian
   */
   virtual bool writeIntBigEndian(int value);
-
-  /** Writes a 64-bit integer to the stream in a little-endian byte order.
-      @returns false if the write operation fails for some reason
-      @see InputStream::readInt64
-  */
-  virtual bool writeInt64(int64 value);
 
   /** Writes a 64-bit integer to the stream in a big-endian byte order.
       @returns false if the write operation fails for some reason
@@ -116,26 +112,11 @@ class ROCKETMQCLIENT_API OutputStream {
   virtual bool writeInt64BigEndian(int64 value);
 
   /** Writes a 32-bit floating point value to the stream in a binary format.
-      The binary 32-bit encoding of the float is written as a little-endian int.
-      @returns false if the write operation fails for some reason
-      @see InputStream::readFloat
-  */
-  virtual bool writeFloat(float value);
-
-  /** Writes a 32-bit floating point value to the stream in a binary format.
       The binary 32-bit encoding of the float is written as a big-endian int.
       @returns false if the write operation fails for some reason
       @see InputStream::readFloatBigEndian
   */
   virtual bool writeFloatBigEndian(float value);
-
-  /** Writes a 64-bit floating point value to the stream in a binary format.
-      The eight raw bytes of the double value are written out as a little-endian
-     64-bit int.
-      @returns false if the write operation fails for some reason
-      @see InputStream::readDouble
-  */
-  virtual bool writeDouble(double value);
 
   /** Writes a 64-bit floating point value to the stream in a binary format.
       The eight raw bytes of the double value are written out as a big-endian
@@ -149,22 +130,6 @@ class ROCKETMQCLIENT_API OutputStream {
       @returns false if the write operation fails for some reason
   */
   virtual bool writeRepeatedByte(uint8 byte, size_t numTimesToRepeat);
-
-  /** Writes a condensed binary encoding of a 32-bit integer.
-
-      If you're storing a lot of integers which are unlikely to have very large
-     values,
-      this can save a lot of space, because values under 0xff will only take up
-     2 bytes,
-      under 0xffff only 3 bytes, etc.
-
-      The format used is: number of significant bytes + up to 4 bytes in
-     little-endian order.
-
-      @returns false if the write operation fails for some reason
-      @see InputStream::readCompressedInt
-  */
-  virtual bool writeCompressedInt(int value);
 
   /** Reads data from an input stream and writes it to this stream.
 

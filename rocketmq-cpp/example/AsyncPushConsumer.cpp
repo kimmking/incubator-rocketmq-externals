@@ -1,3 +1,19 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one or more
+* contributor license agreements.  See the NOTICE file distributed with
+* this work for additional information regarding copyright ownership.
+* The ASF licenses this file to You under the Apache License, Version 2.0
+* (the "License"); you may not use this file except in compliance with
+* the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,7 +29,7 @@
 
 std::mutex g_mtx;
 std::condition_variable g_finished;
-
+TpsReportService g_tps;
 using namespace rocketmq;
 
 class MyMsgListener : public MessageListenerConcurrently {
@@ -24,7 +40,7 @@ class MyMsgListener : public MessageListenerConcurrently {
   virtual ConsumeStatus consumeMessage(const std::vector<MQMessageExt> &msgs) {
     g_msgCount.store(g_msgCount.load() - msgs.size());
     for (size_t i = 0; i < msgs.size(); ++i) {
-      //      std::cout << i << ": " << msgs[i].toString() << std::endl;
+      g_tps.Increment();
     }
 
     if (g_msgCount.load() <= 0) {
@@ -69,6 +85,7 @@ int main(int argc, char *argv[]) {
   } catch (MQClientException &e) {
     cout << e << endl;
   }
+  g_tps.start();
 
   int msgcount = g_msgCount.load();
   for (int i = 0; i < msgcount; ++i) {

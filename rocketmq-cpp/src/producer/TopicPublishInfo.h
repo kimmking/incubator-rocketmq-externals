@@ -54,7 +54,7 @@ class TopicPublishInfo {
     m_async_ioService.stop();
     m_async_service_thread->interrupt();
     m_async_service_thread->join();
-      
+
     m_nonSerivceQueues.clear();
     m_onSerivceQueues.clear();
     m_brokerTimerMap.clear();
@@ -83,7 +83,8 @@ class TopicPublishInfo {
                                            boost::asio::deadline_timer* t) {
     resumeNonServiceMessageQueueList();
     boost::system::error_code e;
-    t->expires_at(t->expires_at() + boost::posix_time::seconds(60), e);
+    t->expires_from_now(t->expires_from_now() + boost::posix_time::seconds(60),
+                        e);
     t->async_wait(boost::bind(
         &TopicPublishInfo::op_resumeNonServiceMessageQueueList, this, e, t));
   }
@@ -133,7 +134,8 @@ class TopicPublishInfo {
     boost::lock_guard<boost::mutex> lock(m_queuelock);
 
     if (m_queues.size() > 0) {
-      LOG_DEBUG("selectOneMessageQueue Enter, queue size:%zu", m_queues.size());
+      LOG_DEBUG("selectOneMessageQueue Enter, queue size:" SIZET_FMT "",
+                m_queues.size());
       unsigned int pos = 0;
       if (mq_index >= 0) {
         pos = mq_index % m_queues.size();
@@ -144,7 +146,7 @@ class TopicPublishInfo {
       if (!lastmq.getBrokerName().empty()) {
         for (size_t i = 0; i < m_queues.size(); i++) {
           if (m_sendWhichQueue.load(boost::memory_order_acquire) ==
-              numeric_limits<int>::max()) {
+              (numeric_limits<int>::max)()) {
             m_sendWhichQueue.store(0, boost::memory_order_release);
           }
 
@@ -164,7 +166,7 @@ class TopicPublishInfo {
         return MQMessageQueue();
       } else {
         if (m_sendWhichQueue.load(boost::memory_order_acquire) ==
-            numeric_limits<int>::max()) {
+            (numeric_limits<int>::max)()) {
           m_sendWhichQueue.store(0, boost::memory_order_release);
         }
 
@@ -195,7 +197,7 @@ class TopicPublishInfo {
       if (!lastmq.getBrokerName().empty()) {
         for (size_t i = 0; i < m_queues.size(); i++) {
           if (m_sendWhichQueue.load(boost::memory_order_acquire) ==
-              numeric_limits<int>::max()) {
+              (numeric_limits<int>::max)()) {
             m_sendWhichQueue.store(0, boost::memory_order_release);
           }
 
@@ -224,7 +226,7 @@ class TopicPublishInfo {
       } else {
         for (size_t i = 0; i < m_queues.size(); i++) {
           if (m_sendWhichQueue.load(boost::memory_order_acquire) ==
-              numeric_limits<int>::max()) {
+              (numeric_limits<int>::max)()) {
             m_sendWhichQueue.store(0, boost::memory_order_release);
           }
           if (pos >= m_queues.size()) pos = pos % m_queues.size();

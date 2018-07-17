@@ -50,6 +50,7 @@ class AsyncPullCallback : public PullCallback {
     if (m_bShutdown == true) {
       LOG_INFO("pullrequest for:%s in shutdown, return",
                (m_pullRequest->m_messageQueue).toString().c_str());
+      m_pullRequest->removePullMsgEvent();
       return;
     }
 
@@ -69,10 +70,16 @@ class AsyncPullCallback : public PullCallback {
 
           if (bProducePullRequest)
             m_callbackOwner->producePullMsgTask(m_pullRequest);
+          else
+            m_pullRequest->removePullMsgEvent();
 
-          LOG_DEBUG("FOUND:%s with size:%zu,nextBeginOffset:%lld",
+          LOG_DEBUG("FOUND:%s with size:" SIZET_FMT ", nextBeginOffset:%lld",
                     (m_pullRequest->m_messageQueue).toString().c_str(),
                     result.msgFoundList.size(), result.nextBeginOffset);
+        } else {
+          LOG_INFO("remove pullmsg event of mq:%s",
+                   (m_pullRequest->m_messageQueue).toString().c_str());
+          m_pullRequest->removePullMsgEvent();
         }
         break;
       }
@@ -100,6 +107,8 @@ class AsyncPullCallback : public PullCallback {
         }
         if (bProducePullRequest)
           m_callbackOwner->producePullMsgTask(m_pullRequest);
+        else
+          m_pullRequest->removePullMsgEvent();
 
         /*LOG_INFO("NO_NEW_MSG:%s,nextBeginOffset:%lld",
                  (m_pullRequest->m_messageQueue).toString().c_str(),
@@ -130,6 +139,8 @@ class AsyncPullCallback : public PullCallback {
         }
         if (bProducePullRequest)
           m_callbackOwner->producePullMsgTask(m_pullRequest);
+        else
+          m_pullRequest->removePullMsgEvent();
         /*LOG_INFO("NO_MATCHED_MSG:%s,nextBeginOffset:%lld",
                  (m_pullRequest->m_messageQueue).toString().c_str(),
                  result.nextBeginOffset);*/
@@ -139,6 +150,8 @@ class AsyncPullCallback : public PullCallback {
         m_pullRequest->setNextOffset(result.nextBeginOffset);
         if (bProducePullRequest)
           m_callbackOwner->producePullMsgTask(m_pullRequest);
+        else
+          m_pullRequest->removePullMsgEvent();
 
         /*LOG_INFO("OFFSET_ILLEGAL:%s,nextBeginOffset:%lld",
                  (m_pullRequest->m_messageQueue).toString().c_str(),
@@ -152,6 +165,8 @@ class AsyncPullCallback : public PullCallback {
         m_pullRequest->setNextOffset(result.nextBeginOffset);
         if (bProducePullRequest)
           m_callbackOwner->producePullMsgTask(m_pullRequest);
+        else
+          m_pullRequest->removePullMsgEvent();
         break;
       }
     }
@@ -161,6 +176,7 @@ class AsyncPullCallback : public PullCallback {
     if (m_bShutdown == true) {
       LOG_INFO("pullrequest for:%s in shutdown, return",
                (m_pullRequest->m_messageQueue).toString().c_str());
+      m_pullRequest->removePullMsgEvent();
       return;
     }
     LOG_WARN("pullrequest for:%s occurs exception, reproduce it",
@@ -266,12 +282,13 @@ void DefaultMQPushConsumer::persistConsumerOffsetByResetOffset() {
 }
 
 void DefaultMQPushConsumer::start() {
+#ifndef WIN32
   /* Ignore the SIGPIPE */
   struct sigaction sa;
   sa.sa_handler = SIG_IGN;
   sa.sa_flags = 0;
   sigaction(SIGPIPE, &sa, 0);
-
+#endif
   switch (m_serviceState) {
     case CREATE_JUST: {
       m_serviceState = START_FAILED;
@@ -329,16 +346,26 @@ void DefaultMQPushConsumer::start() {
           m_pOffsetStore = new RemoteBrokerOffsetStore(groupname, getFactory());
           break;
       }
-      m_pOffsetStore->load();
+      bool bStartFailed = false;
+      string errorMsg;
+      try {
+        m_pOffsetStore->load();
+      } catch (MQClientException& e) {
+        bStartFailed = true;
+        errorMsg = std::string(e.what());
+      }
       m_consumerServeice->start();
 
       getFactory()->start();
 
-      //<!����ط����ʱ��ܳ���;
       updateTopicSubscribeInfoWhenSubscriptionChanged();
       getFactory()->sendHeartbeatToAllBroker();
 
       m_serviceState = RUNNING;
+      if (bStartFailed) {
+        shutdown();
+        THROW_MQEXCEPTION(MQClientException, errorMsg, -1);
+      }
       break;
     }
     case RUNNING:
@@ -518,6 +545,7 @@ void DefaultMQPushConsumer::triggerNextPullRequest(
 
 void DefaultMQPushConsumer::producePullMsgTask(PullRequest* request) {
   if (m_pullmsgQueue->bTaskQueueStatusOK() && isServiceStateOk()) {
+    request->addPullMsgEvent();
     if (m_asyncPull) {
       m_pullmsgQueue->produce(TaskBinder::gen(
           &DefaultMQPushConsumer::pullMessageAsync, this, request));
@@ -525,6 +553,9 @@ void DefaultMQPushConsumer::producePullMsgTask(PullRequest* request) {
       m_pullmsgQueue->produce(
           TaskBinder::gen(&DefaultMQPushConsumer::pullMessage, this, request));
     }
+  } else {
+    LOG_WARN("produce pullmsg of mq:%s failed",
+             request->m_messageQueue.toString().c_str());
   }
 }
 
@@ -534,7 +565,9 @@ void DefaultMQPushConsumer::runPullMsgQueue(TaskQueue* pTaskQueue) {
 
 void DefaultMQPushConsumer::pullMessage(PullRequest* request) {
   if (request == NULL || request->isDroped()) {
-    LOG_WARN("Pull request is set drop, return");
+    LOG_WARN("Pull request is set drop with mq:%s, return",
+             (request->m_messageQueue).toString().c_str());
+    request->removePullMsgEvent();
     return;
   }
 
@@ -617,9 +650,11 @@ void DefaultMQPushConsumer::pullMessage(PullRequest* request) {
                                                    pullResult.msgFoundList);
           producePullMsgTask(request);
 
-          LOG_DEBUG("FOUND:%s with size:%zu,nextBeginOffset:%lld",
+          LOG_DEBUG("FOUND:%s with size:" SIZET_FMT ",nextBeginOffset:%lld",
                     messageQueue.toString().c_str(),
                     pullResult.msgFoundList.size(), pullResult.nextBeginOffset);
+        } else {
+          request->removePullMsgEvent();
         }
         break;
       }
@@ -720,6 +755,7 @@ void DefaultMQPushConsumer::pullMessageAsync(PullRequest* request) {
   if (request == NULL || request->isDroped()) {
     LOG_WARN("Pull request is set drop with mq:%s, return",
              (request->m_messageQueue).toString().c_str());
+    request->removePullMsgEvent();
     return;
   }
 
@@ -798,8 +834,9 @@ void DefaultMQPushConsumer::pullMessageAsync(PullRequest* request) {
 }
 
 void DefaultMQPushConsumer::setAsyncPull(bool asyncFlag) {
-  if(asyncFlag) {
-    LOG_INFO("set pushConsumer:%s to async default pull mode", getGroupName().c_str());
+  if (asyncFlag) {
+    LOG_INFO("set pushConsumer:%s to async default pull mode",
+             getGroupName().c_str());
   } else {
     LOG_INFO("set pushConsumer:%s to sync pull mode", getGroupName().c_str());
   }
@@ -851,11 +888,13 @@ int DefaultMQPushConsumer::getMaxCacheMsgSizePerQueue() const {
 ConsumerRunningInfo* DefaultMQPushConsumer::getConsumerRunningInfo() {
   ConsumerRunningInfo* info = new ConsumerRunningInfo();
   if (info) {
-    if(m_consumerServeice->getConsumeMsgSerivceListenerType() == messageListenerOrderly)
+    if (m_consumerServeice->getConsumeMsgSerivceListenerType() ==
+        messageListenerOrderly)
       info->setProperty(ConsumerRunningInfo::PROP_CONSUME_ORDERLY, "true");
     else
       info->setProperty(ConsumerRunningInfo::PROP_CONSUME_ORDERLY, "flase");
-    info->setProperty(ConsumerRunningInfo::PROP_THREADPOOL_CORE_SIZE, UtilAll::to_string(m_consumeThreadCount));
+    info->setProperty(ConsumerRunningInfo::PROP_THREADPOOL_CORE_SIZE,
+                      UtilAll::to_string(m_consumeThreadCount));
     info->setProperty(ConsumerRunningInfo::PROP_CONSUMER_START_TIMESTAMP,
                       UtilAll::to_string(m_startTime));
 
